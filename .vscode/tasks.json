@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Auga: Restore build prerequisites",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Restore-BuildPrerequisites.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Auga: Validate environment",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Test-Environment.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Auga: Build Debug",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Build-Auga.ps1", "-Configuration", "Debug"],
+      "dependsOn": "Auga: Validate environment",
+      "problemMatcher": "$msCompile",
+      "group": {"kind": "build", "isDefault": true}
+    },
+    {
+      "label": "Auga: Deploy latest DLL",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Deploy-Auga.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Auga: Launch Valheim",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-Command", "Start-Process 'steam://run/892970'"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Auga: Collect logs",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\Collect-Logs.ps1"],
+      "problemMatcher": []
+    }
+  ]
+}

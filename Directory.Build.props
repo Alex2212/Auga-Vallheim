@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <AugaBuildDir>$(MSBuildThisFileDirectory).build\</AugaBuildDir>
+    <GameReferenceDir>$(AugaBuildDir)game\</GameReferenceDir>
+    <TargetFrameworkRootPath Condition="Exists('$(AugaBuildDir)net461\build\.NETFramework\v4.6.1\mscorlib.dll')">$(AugaBuildDir)net461\build\</TargetFrameworkRootPath>
+    <CscToolPath Condition="Exists('$(AugaBuildDir)compiler\tasks\net472\csc.exe')">$(AugaBuildDir)compiler\tasks\net472\</CscToolPath>
+    <LangVersion>10</LangVersion>
+  </PropertyGroup>
+</Project>

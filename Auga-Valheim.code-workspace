@@ -1,0 +1,7 @@
+{
+  "folders": [{"name": "Auga", "path": "E:\\Desktop\\Agua-Vallheim"}],
+  "settings": {
+    "dotnet.defaultSolution": "Auga.sln",
+    "files.exclude": {"**/bin": true, "**/obj": true}
+  }
+}

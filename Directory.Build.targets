@@ -1,0 +1,12 @@
+<Project>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Auga' Or '$(MSBuildProjectName)' == 'AugaUnityLib'">
+    <Reference Include="netstandard">
+      <HintPath>$(ValheimDir)\valheim_Data\Managed\netstandard.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="gui_framework">
+      <HintPath>$(GameReferenceDir)gui_framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
