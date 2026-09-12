@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>10</LangVersion>
+    <GameReferenceDir Condition="'$(GameReferenceDir)' == ''">$(ValheimDir)/valheim_Data/Managed/</GameReferenceDir>
+  </PropertyGroup>
+</Project>

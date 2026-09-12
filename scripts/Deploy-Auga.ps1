@@ -9,8 +9,9 @@ $otherCopies = @(Get-ChildItem -LiteralPath (Join-Path $gamePath 'BepInEx\plugin
 if ($otherCopies.Count -gt 0) {
     throw "Disable other Auga copies in Vortex before deploying: $($otherCopies.FullName -join ', ')"
 }
-$dll = Get-ChildItem -LiteralPath $repoPath -Filter "Auga.dll" -File -Recurse |
-    Where-Object { $_.FullName -match "\\bin\\(Debug|Release)\\" } |
+$dll = @('Debug', 'Release') | ForEach-Object {
+    Get-Item -LiteralPath (Join-Path $repoPath "Auga\bin\$_\Auga.dll") -ErrorAction SilentlyContinue
+} |
     Sort-Object LastWriteTimeUtc -Descending |
     Select-Object -First 1
 if (-not $dll) { throw "No compiled Auga.dll was found. Build the solution first." }

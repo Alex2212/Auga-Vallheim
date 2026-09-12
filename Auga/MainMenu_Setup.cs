@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 
 namespace Auga
 {
@@ -11,7 +11,15 @@ namespace Auga
 
             //var originalChangeLogAsset = __instance.GetComponentInChildren<ChangeLog>(true).m_changeLog;
 
-            __instance.m_settingsPrefab = Auga.Assets.SettingsPrefab;
+            Auga.LogWarning("Valheim 1.0 port: native settings behavior retained with Auga presentation.");
+            if (__instance.GetComponent<MainMenuPresentation>() == null)
+                __instance.gameObject.AddComponent<MainMenuPresentation>();
+            if (__instance.GetComponent<CharacterSelectionPresentation>() == null)
+                __instance.gameObject.AddComponent<CharacterSelectionPresentation>();
+            if (__instance.GetComponent<WorldSelectionPresentation>() == null)
+                __instance.gameObject.AddComponent<WorldSelectionPresentation>();
+            if (__instance.GetComponent<CharacterCreationPresentation>() == null)
+                __instance.gameObject.AddComponent<CharacterCreationPresentation>();
 
             /*var originalLogo = __instance.transform.Find("Menu/Logo");
             originalLogo.SetParent(__instance.transform, true);

@@ -1,5 +1,6 @@
 ﻿using AugaUnity;
 using HarmonyLib;
+using UnityEngine.UI;
 
 namespace Auga
 {
@@ -43,6 +44,18 @@ namespace Auga
                 }
             }
 
+            // Old Auga tooltip prefabs use UI.Text; the current native method
+            // dereferences TMP_Text on these same named objects.
+            if (UITooltip.m_tooltip != null)
+            {
+                bool legacy = false;
+                foreach (var text in UITooltip.m_tooltip.GetComponentsInChildren<Text>(true))
+                {
+                    if (text.name == "Topic") { text.text = Localization.instance.Localize(__instance.m_topic); legacy = true; }
+                    if (text.name == "Text") { text.text = Localization.instance.Localize(__instance.m_text); legacy = true; }
+                }
+                if (legacy) return false;
+            }
             return true;
         }
     }

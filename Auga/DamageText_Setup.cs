@@ -7,19 +7,22 @@ namespace Auga
     [HarmonyPatch]
     public static class DamageText_Setup
     {
-        [HarmonyPatch(typeof(DamageText), nameof(DamageText.Awake))]
-        public static class DamageText_Awake_Patch
+        // Retain the native TMP prefab and Awake initialization. The legacy bundle
+        // uses an older text component and cannot replace the current object safely.
+
+        [HarmonyPatch(typeof(DamageText), nameof(DamageText.AddInworldText))]
+        [HarmonyPrefix]
+        public static void AddInworldText_Prefix(DamageText __instance, out int __state)
         {
-            public static bool Prefix(TextInput __instance)
-            {
-                return !SetupHelper.DirectObjectReplace(__instance.transform, Auga.Assets.DamageText, "DamageText");
-            }
+            __state = __instance.m_worldTexts.Count;
         }
 
         [HarmonyPatch(typeof(DamageText), nameof(DamageText.AddInworldText))]
         [HarmonyPostfix]
-        public static void AddInworldText_Postfix(DamageText __instance, DamageText.TextType type, float dmg, bool mySelf)
+        public static void AddInworldText_Postfix(DamageText __instance, DamageText.TextType type, string text, bool mySelf, int __state)
         {
+            // Native code can skip zero-damage entries when its text limit is reached.
+            if (__instance.m_worldTexts.Count <= __state) return;
             var worldTextInstance = __instance.m_worldTexts.LastOrDefault();
             if (worldTextInstance == null)
             {
@@ -31,9 +34,10 @@ namespace Auga
             {
                 color = Auga.Colors.Healing;
             }
-            else if (mySelf)
+            else if (mySelf && (type == DamageText.TextType.Normal || type == DamageText.TextType.Resistant ||
+                                type == DamageText.TextType.Weak || type == DamageText.TextType.Immune))
             {
-                color = dmg != 0.0f ? Auga.Colors.PlayerDamage : Auga.Colors.PlayerNoDamage;
+                color = text != "0" ? Auga.Colors.PlayerDamage : Auga.Colors.PlayerNoDamage;
             }
             else
             {
@@ -55,8 +59,8 @@ namespace Auga
                         color = Auga.Colors.TooHard;
                         break;
                     default:
-                        color = Color.white;
-                        break;
+                        // Preserve native colors for new text types such as blocking messages.
+                        return;
                 }
             }
             worldTextInstance.m_textField.color = color;

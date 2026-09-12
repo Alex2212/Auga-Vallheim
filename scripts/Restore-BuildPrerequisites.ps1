@@ -17,8 +17,7 @@ function Restore-Package($name, $url, $sha256, $marker) {
     [IO.Compression.ZipFile]::ExtractToDirectory($archive, $destination)
     Write-Host "Restored: $name"
 }
-Restore-Package 'net461' 'https://api.nuget.org/v3-flatcontainer/microsoft.netframework.referenceassemblies.net461/1.0.3/microsoft.netframework.referenceassemblies.net461.1.0.3.nupkg' 'BD52289E5FB8765090BB189B399A06477A350C0863018A455B5E5D9E45298CC9' 'build\.NETFramework\v4.6.1\mscorlib.dll'
-Restore-Package 'compiler' 'https://api.nuget.org/v3-flatcontainer/microsoft.net.compilers.toolset/4.0.1/microsoft.net.compilers.toolset.4.0.1.nupkg' '82031774CAC5B8C2E4D0A6A968EFC1AEB33D62039C24EDE1354D7E596D5BD222' 'tasks\net472\csc.exe'
+Restore-Package 'dotnet' 'https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.408/dotnet-sdk-8.0.408-win-x64.zip' 'DD92F13C30239308BDA478C31572FCE20A4CDE0870B9311A39BDC1158262E47A' 'sdk\8.0.408\dotnet.dll'
 
 $bundlePath = Join-Path $repoPath 'AugaUnity\AssetBundles\augaassets'
 $bundleHash = 'CCF200092C1D91DEB3D452240C443D8DA846B47C11CEF4FE3DB7B853BB95EADB'

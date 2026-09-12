@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace AugaUnity
@@ -32,13 +33,22 @@ namespace AugaUnity
             var skills = player.GetSkills();
             if (skills.m_skillData.TryGetValue(SkillType, out var skillData))
             {
-                _skillTooltip.Skill = skillData;
+                if (_skillTooltip != null) _skillTooltip.Skill = skillData;
 
                 Icon.sprite = skillData.m_info.m_icon;
                 NameText.text = Localization.instance.Localize("$skill_" + SkillType.ToString().ToLower());
-                LevelText.text = $"$level {skillData.m_level:0}";
+                LevelText.text = Localization.instance.Localize("$level") + $" {skillData.m_level:0}";
                 ProgressBarLevel.fillAmount = Mathf.Lerp(StartFill, EndFill, skillData.m_level / 100f);
                 ProgressBarAccumulator.fillAmount = Mathf.Lerp(StartFill, EndFill, skillData.GetLevelPercentage());
+            }
+            else
+            {
+                var definition = skills.m_skills.FirstOrDefault(d => d.m_skill == SkillType);
+                if (definition == null) return;
+                Icon.sprite = definition.m_icon;
+                NameText.text = Localization.instance.Localize("$skill_" + SkillType.ToString().ToLower());
+                LevelText.text = Localization.instance.Localize("$level") + " 0";
+                ProgressBarLevel.fillAmount = ProgressBarAccumulator.fillAmount = StartFill;
             }
         }
 

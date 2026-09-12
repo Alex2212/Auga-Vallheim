@@ -51,6 +51,7 @@
   "itemtype_twohandedweaponleft" : "Two-handed",
   "itemtype_fish" : "Fish",
   "player_panel" : "Player Info", 
+  "player_status_panel" : "Status",
   "player_panel_tooltip" : "View health and stamina status, food, and status effects.",
   "crafting_panel" : "Crafting", 
   "crafting_panel_tooltip" : "Create basic items from raw materials.",

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,7 +8,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AugaUnity</RootNamespace>
     <AssemblyName>Unity.Auga</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
@@ -52,8 +50,6 @@
     <Reference Include="assembly_valheim">
       <HintPath>$(GameReferenceDir)assembly_valheim.dll</HintPath>
     <Private>False</Private></Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="UnityEngine">
       <HintPath>$(ValheimDir)\valheim_Data\Managed\UnityEngine.dll</HintPath>
     <Private>False</Private></Reference>
@@ -95,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddItemIconMaterial.cs" />
+    <Compile Include="LegacyText.cs" />
     <Compile Include="AlwaysUpper.cs" />
     <Compile Include="AugaBindingDisplay.cs" />
     <Compile Include="AugaCharacterSelect.cs" />
@@ -154,8 +151,5 @@
     <Compile Include="UpgradeRequirementsWireFrame.cs" />
     <Compile Include="WorkbenchPanelController.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>xcopy "$(TargetDir)$(TargetFileName)" "$(SolutionDir)AugaUnity\Assets\ExternalLibraries\" /q /y /i</PostBuildEvent>
-  </PropertyGroup>
+
 </Project>

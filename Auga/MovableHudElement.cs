@@ -8,6 +8,7 @@ namespace Auga
         public ConfigEntry<TextAnchor> Anchor;
         public ConfigEntry<Vector2> Position;
         public ConfigEntry<float> Scale;
+        public Vector2 LayoutOffset;
 
         public void Init(TextAnchor defaultAnchor, float defaultPositionX, float defaultPositionY)
         {
@@ -58,7 +59,7 @@ namespace Auga
                     break;
             }
 
-            rectTransform.anchoredPosition = Position.Value;
+            rectTransform.anchoredPosition = Position.Value + LayoutOffset;
             rectTransform.localScale = new Vector3(Scale.Value, Scale.Value);
         }
     }

@@ -15,7 +15,10 @@ namespace Auga
                 if (!Auga.AugaChatShow.Value || Auga.HasChatter)
                     return true;
                 
-                return !SetupHelper.IndirectTwoObjectReplace(__instance.transform, Auga.Assets.AugaChat, "Chat", "Chat_box", "AugaChat");
+                // The bundled input component is missing in current Valheim. Replacing Chat
+                // leaves m_input null and breaks every caller of Chat.HasFocus, including movement.
+                Debug.Log("[Auga] Retaining native chat input for Valheim 1.0.");
+                return true;
             }
 
             public static void Postfix(Chat __instance)
@@ -23,8 +26,7 @@ namespace Auga
                 if (!Auga.AugaChatShow.Value || Auga.HasChatter)
                     return;
                 
-                if (__instance.m_input != null)
-                    __instance.m_input.transform.parent.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.LowerRight, 0, 67);
+                // Native chat owns its layout and focus lifecycle until its prefab is migrated.
             }
         }
 

@@ -39,5 +39,7 @@ Please report bugs and mod conflicts on the [GitHub Issues Page](https://github.
 
 Project Auga comes with an API that allows other mods to easily access its features and create UI elements in the Auga style. It's also open-source on GitHub.
 
-Auga API: https://github.com/RandyKnapp/Auga/wiki/Auga-API
+For this native-UI port, start with the [modding guide](docs/MODDING.md), [API reference](docs/API-REFERENCE.md), and [buildable example](AugaApiExample/AugaApiExample.cs).
+
+Run `scripts/Build-AugaApi.ps1 -Package` to validate the runtime/shim contract and create the current SDK. The guide covers restored tab/variant APIs, readiness, and superseded integration patterns. The historical API ZIPs are not the current SDK.
 Source: https://github.com/RandyKnapp/Auga

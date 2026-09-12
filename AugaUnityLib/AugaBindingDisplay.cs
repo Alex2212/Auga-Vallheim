@@ -33,7 +33,22 @@ namespace AugaUnity
                 return;
             }
 
-            var keycode = ZInput.instance.m_buttons[keyName].m_key;
+            var bindings = ZInput.instance.m_buttons[keyName].ButtonAction.bindings;
+            var bindingPath = bindings.Count > 0 ? bindings[0].effectivePath : string.Empty;
+            var keycode = KeyCode.None;
+            if (!string.IsNullOrEmpty(bindingPath))
+            {
+                var controlName = bindingPath.Substring(bindingPath.LastIndexOf('/') + 1);
+                System.Enum.TryParse(controlName, true, out keycode);
+                switch (bindingPath.ToLowerInvariant())
+                {
+                    case "<mouse>/leftbutton": keycode = KeyCode.Mouse0; break;
+                    case "<mouse>/rightbutton": keycode = KeyCode.Mouse1; break;
+                    case "<mouse>/middlebutton": keycode = KeyCode.Mouse2; break;
+                    case "<mouse>/backbutton": keycode = KeyCode.Mouse3; break;
+                    case "<mouse>/forwardbutton": keycode = KeyCode.Mouse4; break;
+                }
+            }
             var localizedKeyString = Localization.instance.GetBoundKeyString(keyName);
 
             var showMouse = -1;

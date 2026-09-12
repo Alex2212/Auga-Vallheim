@@ -33,7 +33,8 @@ namespace AugaUnity
 
         public void OnDisable()
         {
-            AugaMessageLog.instance.OnLogAdded -= OnLogAdded;
+            if (AugaMessageLog.instance != null)
+                AugaMessageLog.instance.OnLogAdded -= OnLogAdded;
 
             for (var i = LogContainer.childCount - 1; i >= 0; i--)
             {

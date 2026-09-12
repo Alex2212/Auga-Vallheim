@@ -33,10 +33,7 @@ namespace AugaUnity
         {
             Message = text;
             Icon.enabled = icon != null;
-            if (icon != null)
-            {
-                Icon.sprite = icon;
-            }
+            Icon.sprite = icon;
             Amount = amount;
             SetAtTargetPosition();
             RefreshText();
@@ -65,6 +62,8 @@ namespace AugaUnity
             }
 
             _isFadingOut = true;
+            MessageText.CrossFadeAlpha(1, 0, true);
+            Icon.CrossFadeAlpha(1, 0, true);
             _fadeCoroutine = StartCoroutine(FadeCoroutine());
         }
 
@@ -115,11 +114,6 @@ namespace AugaUnity
 
         public void AddMessage(string text, Sprite icon, int amount)
         {
-            if (LogContainer.childCount >= MaxMessageCount)
-            {
-                Destroy(LogContainer.GetChild(0).gameObject);
-            }
-
             TryAddExistingMessage(text, icon, amount);
         }
 
@@ -128,7 +122,7 @@ namespace AugaUnity
             foreach (Transform child in LogContainer)
             {
                 var message = child.GetComponent<AugaTopLeftMessage>();
-                if (message.Message == text)
+                if (message != null && message.Message == text && message.Icon.sprite == icon)
                 {
                     message.AddAmount(amount);
                     return;
@@ -140,6 +134,13 @@ namespace AugaUnity
 
         private void AddNewMessage(string text, Sprite icon, int amount)
         {
+            while (LogContainer.childCount >= MaxMessageCount)
+            {
+                var oldest = LogContainer.GetChild(0);
+                oldest.gameObject.SetActive(false);
+                oldest.SetParent(null, false);
+                Destroy(oldest.gameObject);
+            }
             var newMessage = Instantiate(LogPrefab, LogContainer, false);
             newMessage.SetValue(text, icon, amount);
         }

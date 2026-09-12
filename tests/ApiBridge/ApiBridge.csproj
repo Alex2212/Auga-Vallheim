@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Auga/API.Bridge.cs" Link="API.Bridge.cs" />
+    <Compile Include="Contract.cs" /><Compile Include="Program.cs" />
+  </ItemGroup>
+</Project>

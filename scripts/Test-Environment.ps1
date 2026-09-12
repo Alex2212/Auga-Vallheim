@@ -16,15 +16,8 @@ if ($missing.Count -gt 0) {
     exit 1
 }
 $problems = @()
-if (-not $msbuildPath) { $problems += 'MSBuild was not found. Install Visual Studio Build Tools.' }
-$frameworkPath = Join-Path ${env:ProgramFiles(x86)} 'Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1'
-$localFrameworkPath = Join-Path $repoPath '.build\net461\build\.NETFramework\v4.6.1'
-if (Test-Path -LiteralPath (Join-Path $localFrameworkPath 'mscorlib.dll')) { $frameworkPath = $localFrameworkPath }
-if (-not (Test-Path -LiteralPath (Join-Path $frameworkPath 'mscorlib.dll'))) {
-    $problems += '.NET Framework 4.6.1 reference assemblies are missing; the original projects require its targeting pack.'
-}
-if (-not (Test-Path -LiteralPath (Join-Path $repoPath '.build\compiler\tasks\net472\csc.exe'))) {
-    $problems += 'Run scripts/Restore-BuildPrerequisites.ps1 to restore the pinned C# 10 compiler.'
+if (-not (Test-Path -LiteralPath (Join-Path $repoPath '.build\dotnet\sdk\8.0.408\dotnet.dll'))) {
+    $problems += 'Run scripts/Restore-BuildPrerequisites.ps1 to restore the pinned .NET SDK.'
 }
 $bundlePath = Join-Path $repoPath 'AugaUnity\AssetBundles\augaassets'
 if (-not (Test-Path -LiteralPath $bundlePath)) {

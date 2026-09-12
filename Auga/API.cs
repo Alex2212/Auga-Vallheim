@@ -8,8 +8,44 @@ using Object = UnityEngine.Object;
 
 namespace Auga
 {
-    public static class API
+    public static partial class API
     {
+        public static bool IsLoaded() => true;
+        public static System.Reflection.Assembly LoadAssembly() => typeof(API).Assembly;
+        public static bool IsReady() => Auga.Assets.PanelBase != null && Auga.Assets.InventoryTooltip != null;
+        public static bool IsInventoryReady() => InventoryGui.instance != null &&
+            InventoryGui.instance.GetComponent<InventoryPresentation>()?.ApiReady == true;
+        public static string GetApiVersion() => "2.0.0";
+        public static bool SupportsFeature(string feature)
+        {
+            switch (feature)
+            {
+                case "ui-factories": case "tooltips": case "tooltip-events": case "requirements": return IsReady();
+                case "inventory-access": return IsInventoryReady();
+                // Native presentation provides these contracts after inventory setup.
+                case "player-tabs": case "workbench-tabs": case "custom-variants":
+                    return IsInventoryReady() || WorkbenchPanelController.instance != null;
+                default: return false;
+            }
+        }
+
+        public static Transform Inventory_GetRoot() => IsInventoryReady() ? InventoryGui.instance.m_inventoryRoot : null;
+        public static Font GetNorseFont() => Resources.FindObjectsOfTypeAll<Font>()
+            .FirstOrDefault(font => font.name.StartsWith("Norsebold", StringComparison.OrdinalIgnoreCase));
+        public static TMPro.TMP_FontAsset GetBoldTMPFont() => LegacyText.GetFont(GetBoldFont());
+        public static TMPro.TMP_FontAsset GetNorseTMPFont() => GetNorseFont() != null ? LegacyText.GetFont(GetNorseFont()) : null;
+
+        private static void ClearTooltipData(GameObject obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            var tooltip = obj.GetComponent<UITooltip>();
+            if (tooltip != null && UITooltip.m_current == tooltip) UITooltip.HideTooltip();
+            if (obj.TryGetComponent<ItemTooltip>(out var item)) item.Item = null;
+            if (obj.TryGetComponent<FoodTooltip>(out var food)) food.Food = null;
+            if (obj.TryGetComponent<StatusTooltip>(out var status)) status.StatusEffect = null;
+            if (obj.TryGetComponent<SkillTooltip>(out var skill)) skill.Skill = null;
+        }
+
         // Fonts & Assets
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         [UsedImplicitly]
@@ -213,6 +249,7 @@ namespace Auga
         [UsedImplicitly]
         public static void Tooltip_MakeSimpleTooltip(GameObject obj)
         {
+            ClearTooltipData(obj);
             var uiTooltip = obj.GetComponent<UITooltip>();
             if (uiTooltip == null)
             {
@@ -225,6 +262,7 @@ namespace Auga
         [UsedImplicitly]
         public static void Tooltip_MakeItemTooltip(GameObject obj, ItemDrop.ItemData item)
         {
+            ClearTooltipData(obj);
             var uiTooltip = obj.GetComponent<UITooltip>();
             if (uiTooltip == null)
             {
@@ -240,11 +278,14 @@ namespace Auga
             }
 
             itemTooltip.Item = item;
+            uiTooltip.m_topic = item?.m_shared.m_name ?? "";
+            uiTooltip.m_text = item?.m_shared.m_description ?? "";
         }
 
         [UsedImplicitly]
         public static void Tooltip_MakeFoodTooltip(GameObject obj, Player.Food food)
         {
+            ClearTooltipData(obj);
             var uiTooltip = obj.GetComponent<UITooltip>();
             if (uiTooltip == null)
             {
@@ -260,11 +301,14 @@ namespace Auga
             }
 
             foodTooltip.Food = food;
+            uiTooltip.m_topic = food?.m_item?.m_shared.m_name ?? "";
+            uiTooltip.m_text = food?.m_item?.m_shared.m_description ?? "";
         }
 
         [UsedImplicitly]
         public static void Tooltip_MakeStatusEffectTooltip(GameObject obj, StatusEffect statusEffect)
         {
+            ClearTooltipData(obj);
             var uiTooltip = obj.GetComponent<UITooltip>();
             if (uiTooltip == null)
             {
@@ -280,11 +324,14 @@ namespace Auga
             }
 
             statusEffectTooltip.StatusEffect = statusEffect;
+            uiTooltip.m_topic = statusEffect != null ? statusEffect.m_name : "";
+            uiTooltip.m_text = statusEffect != null ? statusEffect.GetTooltipString() : "";
         }
 
         [UsedImplicitly]
         public static void Tooltip_MakeSkillTooltip(GameObject obj, Skills.Skill skill)
         {
+            ClearTooltipData(obj);
             var uiTooltip = obj.GetComponent<UITooltip>();
             if (uiTooltip == null)
             {
@@ -300,6 +347,7 @@ namespace Auga
             }
 
             skillTooltip.Skill = skill;
+            uiTooltip.m_topic = skill != null ? "$skill_" + skill.m_info.m_skill.ToString().ToLowerInvariant() : "";
         }
 
         // Player Panel Tabs
@@ -307,12 +355,14 @@ namespace Auga
         [UsedImplicitly]
         public static bool PlayerPanel_HasTab(string tabID)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiHasTab(tabID, false);
             return WorkbenchPanelController.instance != null && WorkbenchPanelController.instance.HasPlayerPanelTab(tabID);
         }
 
         [UsedImplicitly]
         public static PlayerPanelTabData PlayerPanel_AddTab(string tabID, Sprite tabIcon, string tabTitleText, Action<int> onTabSelected)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiAddPlayerTab(tabID, tabIcon, tabTitleText, onTabSelected);
             if (WorkbenchPanelController.instance != null)
             {
                 var data = new PlayerPanelTabData();
@@ -330,12 +380,14 @@ namespace Auga
         [UsedImplicitly]
         public static bool PlayerPanel_IsTabActive(GameObject tabButton)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiIsTabActive(tabButton, false);
             return WorkbenchPanelController.instance != null && WorkbenchPanelController.instance.IsTabActive(tabButton);
         }
 
         [UsedImplicitly]
         public static Button PlayerPanel_GetTabButton(int index)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiPlayerTab(index);
             if (WorkbenchPanelController.instance != null && index >= 0 && index < WorkbenchPanelController.instance.DefaultTabController.TabButtons.Count)
             {
                 return WorkbenchPanelController.instance.DefaultTabController.TabButtons[index].Button;
@@ -348,12 +400,14 @@ namespace Auga
         [UsedImplicitly]
         public static bool Workbench_HasWorkbenchTab(string tabID)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiHasTab(tabID, true);
             return WorkbenchPanelController.instance != null && WorkbenchPanelController.instance.HasWorkbenchTab(tabID);
         }
 
         [UsedImplicitly]
         public static WorkbenchTabData Workbench_AddWorkbenchTab(string tabID, Sprite tabIcon, string tabTitleText, Action<int> onTabSelected)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiAddWorkbenchTab(tabID, tabIcon, tabTitleText, onTabSelected, false);
             if (WorkbenchPanelController.instance != null)
             {
                 var data = new WorkbenchTabData();
@@ -373,6 +427,7 @@ namespace Auga
         [UsedImplicitly]
         public static WorkbenchTabData Workbench_AddVanillaWorkbenchTab(string tabID, Sprite tabIcon, string tabTitleText, Action<int> onTabSelected)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiAddWorkbenchTab(tabID, tabIcon, tabTitleText, onTabSelected, true);
             if (WorkbenchPanelController.instance != null)
             {
                 var data = new WorkbenchTabData();
@@ -392,24 +447,28 @@ namespace Auga
         [UsedImplicitly]
         public static bool Workbench_IsTabActive(GameObject tabButton)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiIsTabActive(tabButton, true);
             return WorkbenchPanelController.instance != null && WorkbenchPanelController.instance.IsTabActive(tabButton);
         }
 
         [UsedImplicitly]
         public static Button Workbench_GetCraftingTabButton()
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiWorkbenchTab(0);
             return WorkbenchPanelController.instance?.WorkbenchTabController.TabButtons[0].GetComponent<Button>();
         }
 
         [UsedImplicitly]
         public static Button Workbench_GetUpgradeTabButton()
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiWorkbenchTab(1);
             return WorkbenchPanelController.instance?.WorkbenchTabController.TabButtons[1].GetComponent<Button>();
         }
 
         [UsedImplicitly]
         public static GameObject Workbench_CreateNewResultsPanel()
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiCreateResultsPanel();
             return WorkbenchPanelController.instance?.CraftingPanel.CreateResultsPanel();
         }
 
@@ -516,6 +575,34 @@ namespace Auga
 
         // Complex Tooltip
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public static IDisposable ComplexTooltip_SubscribeItem(Action<GameObject, ItemDrop.ItemData> listener) => Subscribe(listener,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForItem += handler,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForItem -= handler);
+        public static IDisposable ComplexTooltip_SubscribeFood(Action<GameObject, Player.Food> listener) => Subscribe(listener,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForFood += handler,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForFood -= handler);
+        public static IDisposable ComplexTooltip_SubscribeStatusEffect(Action<GameObject, StatusEffect> listener) => Subscribe(listener,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForStatusEffect += handler,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForStatusEffect -= handler);
+        public static IDisposable ComplexTooltip_SubscribeSkill(Action<GameObject, Skills.Skill> listener) => Subscribe(listener,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForSkill += handler,
+            handler => ComplexTooltip.OnComplexTooltipGeneratedForSkill -= handler);
+
+        private static IDisposable Subscribe<T>(Action<GameObject, T> listener, Action<Action<ComplexTooltip, T>> add, Action<Action<ComplexTooltip, T>> remove)
+        {
+            if (listener == null) throw new ArgumentNullException(nameof(listener));
+            Action<ComplexTooltip, T> handler = (tooltip, data) => listener(tooltip.gameObject, data);
+            add(handler);
+            return new TooltipSubscription(() => remove(handler));
+        }
+
+        private sealed class TooltipSubscription : IDisposable
+        {
+            private Action _remove;
+            public TooltipSubscription(Action remove) => _remove = remove;
+            public void Dispose() { var remove = _remove; _remove = null; remove?.Invoke(); }
+        }
+
         private static bool ComplexTooltipCheck(GameObject complexTooltipGO, out ComplexTooltip complexTooltip)
         {
             complexTooltip = complexTooltipGO.GetComponent<ComplexTooltip>();
@@ -792,7 +879,7 @@ namespace Auga
             }
 
             var convertedWireStates = wireStates.Select(wireState => (WireState)wireState).ToList();
-            requirementsPanel.WireFrame.Set(convertedWireStates, canCraft);
+            requirementsPanel.WireFrame?.Set(convertedWireStates, canCraft);
         }
 
 
@@ -801,6 +888,7 @@ namespace Auga
         [UsedImplicitly]
         public static Text CustomVariantPanel_Enable(string buttonLabel, Action<bool> onShow)
         {
+            if (IsInventoryReady()) return InventoryGui.instance.GetComponent<InventoryPresentation>().ApiEnableVariant(buttonLabel, onShow);
             if (WorkbenchPanelController.instance == null)
             {
                 return null;
@@ -812,6 +900,7 @@ namespace Auga
         [UsedImplicitly]
         public static void CustomVariantPanel_SetButtonLabel(string buttonLabel)
         {
+            if (IsInventoryReady()) { InventoryGui.instance.GetComponent<InventoryPresentation>().ApiSetVariantLabel(buttonLabel); return; }
             if (WorkbenchPanelController.instance == null)
             {
                 return;
@@ -823,6 +912,7 @@ namespace Auga
         [UsedImplicitly]
         public static void CustomVariantPanel_Disable()
         {
+            if (IsInventoryReady()) { InventoryGui.instance.GetComponent<InventoryPresentation>().ApiDisableVariant(); return; }
             WorkbenchPanelController.instance?.CraftingPanel.DisableCustomVariantDialog();
         }
     }

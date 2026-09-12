@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Threading;
+using System.Linq;
 using AugaUnity;
 using BepInEx;
 using BepInEx.Bootstrap;
@@ -109,6 +109,8 @@ namespace Auga
         public static ConfigEntry<bool> EitrBarShowTicks;
         
         public static ConfigEntry<bool> BuildMenuShow;
+        public static ConfigEntry<bool> ShowClock;
+        internal static readonly bool LegacyBuildMenuSupported = false;
         public static ConfigEntry<bool> AugaChatShow;
 
         public static readonly AugaAssets Assets = new AugaAssets();
@@ -132,38 +134,21 @@ namespace Auga
         public void Awake()
         {
             _instance = this;
-            if (int.TryParse(Assembly.GetExecutingAssembly().GetName().Version.ToString().Split('.')[3],out var revision))
-            {
-                if (revision > 0)
-                {
-                    Debug.LogWarning($"==============================================================================");
-                    Debug.LogWarning($"You are using a PTB version of this mod. It will not work in live.");
-                    Debug.LogWarning($"Project Auga - Version {Assembly.GetExecutingAssembly().GetName().Version}");
-                    Debug.LogWarning($"Valheim - Version {(global::Version.GetVersionString())}");
-
-                    if ((global::Version.CurrentVersion.m_minor == 217 && global::Version.CurrentVersion.m_patch >= 5 ) || global::Version.CurrentVersion.m_minor > 217)
-                    {
-                        Debug.LogWarning($"GAME VERSION CHECK - PASSED");
-                        Debug.LogWarning($"==============================================================================");
-                    }
-                    else
-                    {
-                        Debug.LogError($">>>>>>>>> GAME VERSION MISMATCH - EXITING <<<<<<<<");
-                        Debug.LogWarning($"==============================================================================");
-                        Thread.Sleep(10000);
-                        
-                        Destroy(this);
-                        return;
-                    }
-                }
-            }
-            
-            
-            LoadDependencies();
-            LoadTranslations();
+            Logger.LogInfo($"Auga port starting: Valheim {(global::Version.GetVersionString())}, Unity {Application.unityVersion}");
             LoadConfig();
-            LoadAssets();
-
+            try
+            {
+                LoadDependencies();
+                LoadTranslations();
+                LoadAssets();
+                Logger.LogInfo("Embedded dependencies and asset bundle loaded.");
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError($"Auga startup disabled before patching: {exception}");
+                enabled = false;
+                return;
+            }
             ApplyCursor();
 
             HasBetterTrader = Chainloader.PluginInfos.ContainsKey("Menthus.bepinex.plugins.BetterTrader");
@@ -172,7 +157,8 @@ namespace Auga
             HasChatter = Chainloader.PluginInfos.ContainsKey("redseiko.valheim.chatter");
             HasSearsCatalog = Chainloader.PluginInfos.ContainsKey("redseiko.valheim.searscatalog");
 
-            _harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), PluginID);
+            _harmony = new Harmony(PluginID);
+            ApplyPatchGroups();
 
             // Patch MultiCraft_UI.CreateSpaceFromCraftButton
             
@@ -284,6 +270,46 @@ namespace Auga
             return false;
         }
 
+        private void ApplyPatchGroups()
+        {
+            foreach (var type in typeof(Auga).Assembly.GetTypes().OrderBy(type => type.FullName))
+            {
+                if (!type.IsDefined(typeof(HarmonyPatch), false)) continue;
+                var family = type;
+                while (family.DeclaringType != null) family = family.DeclaringType;
+                // These replacements depend on removed input components or obsolete panel paths.
+                // Keep each subsystem native as a unit, including its dependent update patches.
+                if (family == typeof(InventoryPanel_Patches) || family == typeof(PauseMenu_Setup) ||
+                    family == typeof(Minimap_Setup) || family == typeof(TextInput_Setup) ||
+                    family == typeof(TextViewer_Setup))
+                {
+                    Logger.LogWarning($"Valheim 1.0 compatibility: retaining native behavior for {type.Name}; legacy UI migration pending.");
+                    continue;
+                }
+                if (!LegacyBuildMenuSupported && (family == typeof(Hud_UpdatePieceList_Patch) ||
+                    family == typeof(Hud_SetupPieceInfo_Patch) || family == typeof(PieceTable_NextCategory_Patch) ||
+                    family == typeof(PieceTable_PrevCategory_Patch))) continue;
+                try
+                {
+                    var patched = _harmony.CreateClassProcessor(type).Patch();
+                    if (patched != null && patched.Count > 0)
+                        Logger.LogInfo($"Patched {type.Name}: {patched.Count} targets.");
+                }
+                catch (Exception exception)
+                {
+                    // Remove any partial patches belonging to this class, retaining other groups.
+                    foreach (var original in _harmony.GetPatchedMethods().ToArray())
+                    {
+                        var info = Harmony.GetPatchInfo(original);
+                        foreach (var patch in info.Prefixes.Concat(info.Postfixes).Concat(info.Transpilers).Concat(info.Finalizers).ToArray())
+                            if (patch.owner == PluginID && patch.PatchMethod.DeclaringType == type)
+                                _harmony.Unpatch(original, patch.PatchMethod);
+                    }
+                    Logger.LogError($"Disabled patch group {type.FullName}: {exception}");
+                }
+            }
+        }
+
         public void OnDestroy()
         {
             _harmony?.UnpatchSelf();
@@ -292,7 +318,7 @@ namespace Auga
 
         private void LoadDependencies()
         {
-            var assembly = Assembly.GetCallingAssembly();
+            var assembly = typeof(Auga).Assembly;
             LoadEmbeddedAssembly(assembly, "fastJSON.dll");
             LoadEmbeddedAssembly(assembly, "Unity.Auga.dll");
         }
@@ -309,7 +335,7 @@ namespace Auga
             using (stream)
             {
                 var data = new byte[stream.Length];
-                stream.Read(data, 0, data.Length);
+                using (var reader = new BinaryReader(stream)) data = reader.ReadBytes(data.Length);
                 Assembly.Load(data);
             }
         }
@@ -337,6 +363,7 @@ namespace Auga
             _loggingEnabled = Config.Bind("Logging", "LoggingEnabled", false, "Enable logging");
             _logLevel = Config.Bind("Logging", "LogLevel", LogLevel.Info, "Only log messages of the selected level or higher");
             UseAugaTrash = Config.Bind("Options", "UseAugaTrash", false, "Enable Auga's built in trash button. Click on the button while holding an item or part of a stack with the mouse.");
+            ShowClock = Config.Bind("Gameplay", "ShowClock", true, "Show the in-game HH:MM clock above the minimap.");
             
             HealthBarShow = Config.Bind("StatBars", "HealthBarShow", true, "If false, hides the health bar completely.");
             HealthBarFixedSize = Config.Bind("StatBars", "HealthBarFixedSize", 0, "If greater than 0, forces the health bar to be that many pixels long, regardless of the player's max health.");
@@ -363,6 +390,7 @@ namespace Auga
         private static void LoadAssets()
         {
             var assetBundle = LoadAssetBundle("augaassets");
+            if (assetBundle == null) throw new InvalidOperationException("Unity could not load augaassets.");
             Assets.AugaLogo = assetBundle.LoadAsset<GameObject>("AugaLogo");
             Assets.InventoryScreen = assetBundle.LoadAsset<GameObject>("Inventory_screen");
             Assets.Cursor = assetBundle.LoadAsset<Texture2D>("Cursor2");
@@ -400,6 +428,22 @@ namespace Auga
             Assets.ConfirmDialog = assetBundle.LoadAsset<GameObject>("ConfirmDialog");
             Assets.RecyclingPanelIcon = assetBundle.LoadAsset<Sprite>("RecyclingPanel");
             Assets.LeftWristMountUI = assetBundle.LoadAsset<GameObject>("LeftWristMountUI");
+            LegacyText.FallbackFont = Assets.SourceSansProRegular;
+            // Old serialized TMP assets have incompatible materials in Unity 6. Rebuild fonts
+            // from the preserved source fonts before any bundled UI is instantiated.
+            foreach (var field in Assets.GetType().GetFields())
+            {
+                if (!(field.GetValue(Assets) is GameObject prefab)) continue;
+                foreach (var label in prefab.GetComponentsInChildren<TMPro.TMP_Text>(true))
+                {
+                    var name = label.font != null ? label.font.name : "";
+                    Font source = name.IndexOf("Norse", StringComparison.OrdinalIgnoreCase) >= 0
+                        ? Resources.FindObjectsOfTypeAll<Font>().FirstOrDefault(font => font.name.StartsWith("Norse", StringComparison.OrdinalIgnoreCase))
+                        : name.IndexOf("Bold", StringComparison.OrdinalIgnoreCase) >= 0 ? Assets.SourceSansProBold : Assets.SourceSansProRegular;
+                    label.font = LegacyText.GetFont(source);
+                    label.fontSharedMaterial = label.font.material;
+                }
+            }
         }
 
         private static void ApplyCursor()
@@ -416,7 +460,7 @@ namespace Auga
                 return AssetBundle.LoadFromFile(assetBundlePath);
             }
 
-            var assembly = Assembly.GetCallingAssembly();
+            var assembly = typeof(Auga).Assembly;
             var assetBundle = AssetBundle.LoadFromStream(assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{filename}"));
 
             return assetBundle;
@@ -455,7 +499,7 @@ namespace Auga
 
         public static void LogWarning(string message)
         {
-            if (_loggingEnabled.Value && _logLevel.Value <= LogLevel.Warning)
+            if (_instance != null)
             {
                 _instance.Logger.LogWarning(message);
             }
@@ -463,7 +507,7 @@ namespace Auga
 
         public static void LogError(string message)
         {
-            if (_loggingEnabled.Value && _logLevel.Value <= LogLevel.Error)
+            if (_instance != null)
             {
                 _instance.Logger.LogError(message);
             }
@@ -527,4 +571,3 @@ namespace Auga
         }
     }
 }
-

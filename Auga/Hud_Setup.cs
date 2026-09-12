@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,14 @@ namespace Auga
         public static void Hud_Awake_Postfix(Hud __instance)
         {
 
+            // Native UpdateIcons expects TMP labels and the current binding component on each slot.
+            var nativeHotkeyRoot = __instance.transform.Find("hudroot/HotKeyBar");
+            var nativeHotkeySlot = nativeHotkeyRoot.GetComponent<HotkeyBar>().m_elementPrefab;
+            InventoryPresentation.StyleSlotBackground(nativeHotkeySlot.transform);
+            if (nativeHotkeySlot.transform.IsChildOf(nativeHotkeyRoot))
+                nativeHotkeySlot.transform.SetParent(__instance.transform.Find("hudroot"), true);
             var hotkeyBar = __instance.Replace("hudroot/HotKeyBar", Auga.Assets.Hud, "hudroot/HotKeyBar");
+            hotkeyBar.GetComponent<HotkeyBar>().m_elementPrefab = nativeHotkeySlot;
             hotkeyBar.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.UpperLeft, 55, -44);
             
             __instance.m_statusEffectListRoot = null;
@@ -42,37 +49,27 @@ namespace Auga
             __instance.m_sleepingProgress = loadingScreen.Find("Sleeping").gameObject;
             __instance.m_teleportingProgress = loadingScreen.Find("Teleporting").gameObject;
             __instance.m_loadingImage = loadingScreen.Find("Loading/Image").GetComponent<Image>();
-            __instance.m_loadingTip = loadingScreen.Find("Loading/Tip").GetComponent<Text>();
+            __instance.m_loadingTip = loadingScreen.Find("Loading/Tip").GetComponent<Text>().AsTmp();
             __instance.m_sleepingProgress.GetComponent<SleepText>().m_dreamTexts = originalDreamTexts;
 
             
             __instance.m_eventBar = __instance.Replace("hudroot/EventBar", Auga.Assets.Hud).gameObject;
-            __instance.m_eventName = __instance.m_eventBar.GetComponentInChildren<Text>();
+            __instance.m_eventName = __instance.m_eventBar.GetComponentInChildren<Text>().AsTmp();
             __instance.m_eventBar.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.UpperCenter, 0, -90);
 
             __instance.m_damageScreen = __instance.Replace("hudroot/Damaged", Auga.Assets.Hud).GetComponent<Image>();
 
 
-            var newCrosshair = __instance.Replace("hudroot/crosshair", Auga.Assets.Hud);
-            __instance.m_crosshair = newCrosshair.Find("crosshair").GetComponent<Image>();
-            __instance.m_crosshairBow = newCrosshair.Find("crosshair_bow").GetComponent<Image>();
-            __instance.m_hoverName = newCrosshair.Find("Dummy/HoverName").GetComponent<TextMeshProUGUI>();
-            __instance.m_pieceHealthRoot = (RectTransform)newCrosshair.Find("PieceHealthRoot");
-            __instance.m_pieceHealthBar = newCrosshair.Find("PieceHealthRoot/PieceHealthBar").GetComponent<GuiBar>();
-            __instance.m_targetedAlert = newCrosshair.Find("Sneak/Alert").gameObject;
-            __instance.m_targeted = newCrosshair.Find("Sneak/Detected").gameObject;
-            __instance.m_hidden = newCrosshair.Find("Sneak/Hidden").gameObject;
-            __instance.m_stealthBar = newCrosshair.Find("Sneak/StealthBar").GetComponent<GuiBar>();
-            __instance.m_pieceHealthBar.gameObject.AddComponent<MovableHudElement>().Init("BuildPieceHealthBar", TextAnchor.MiddleCenter, 130, 0);
-            __instance.m_targetedAlert.transform.parent.gameObject.AddComponent<MovableHudElement>().Init("Stealth", TextAnchor.MiddleCenter, 0, 0);
+            // Keep current crosshair children and field bindings, including newer targeting indicators.
+            // Destroying this root leaves native UpdateCrosshair with dangling GameObject references.
 
 
             var originalGuardianPowerMaterial = __instance.m_gpIcon.material;
             __instance.m_gpRoot = (RectTransform)__instance.Replace("hudroot/GuardianPower", Auga.Assets.Hud);
-            __instance.m_gpName = __instance.m_gpRoot.Find("Name").GetComponent<Text>();
+            __instance.m_gpName = __instance.m_gpRoot.Find("Name").GetComponent<Text>().AsTmp();
             __instance.m_gpIcon = __instance.m_gpRoot.Find("Icon").GetComponent<Image>();
             __instance.m_gpIcon.material = originalGuardianPowerMaterial;
-            __instance.m_gpCooldown = __instance.m_gpRoot.Find("TimeText").GetComponent<Text>();
+            __instance.m_gpCooldown = __instance.m_gpRoot.Find("TimeText").GetComponent<Text>().AsTmp();
             
             __instance.m_gpRoot.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.LowerLeft, 60, 70);
 
@@ -120,7 +117,7 @@ namespace Auga
             __instance.m_eitrText = null;
 
             __instance.m_actionBarRoot = __instance.Replace("hudroot/action_progress", Auga.Assets.Hud).gameObject;
-            __instance.m_actionName = __instance.m_actionBarRoot.GetComponentInChildren<Text>();
+            __instance.m_actionName = __instance.m_actionBarRoot.GetComponentInChildren<Text>().AsTmp();
             __instance.m_actionProgress = __instance.m_actionBarRoot.GetComponent<GuiBar>();
             __instance.m_actionBarRoot.gameObject.AddComponent<MovableHudElement>().Init("ActionProgress", TextAnchor.LowerCenter, 0, 226);
 
@@ -129,8 +126,12 @@ namespace Auga
             __instance.m_staggerProgress = newStaggerPanel.Find("staggerbar/RightBar/Background/FillMask/FillFast").GetComponent<GuiBar>();
             newStaggerPanel.gameObject.AddComponent<MovableHudElement>().Init("StaggerPanel", TextAnchor.LowerCenter, 0, 151);
 
-            if (Auga.BuildMenuShow.Value && !Auga.HasSearsCatalog)
+            if (Auga.LegacyBuildMenuSupported && Auga.BuildMenuShow.Value && !Auga.HasSearsCatalog)
             {
+                // This newer native indicator lives beneath the build UI being replaced.
+                // UpdateCrosshair still owns and toggles it on every frame.
+                if (__instance.m_hoveredPieceAuthorWindow != null)
+                    __instance.m_hoveredPieceAuthorWindow.transform.SetParent(__instance.transform.Find("hudroot"), true);
                 // Setup the icon material to grayscale the piece icons
                 var iconMaterial = __instance.m_pieceIconPrefab.transform.Find("icon").GetComponent<Image>().material;
                 Auga.Assets.BuildHudElement.transform.Find("icon").GetComponent<Image>().material = iconMaterial;
@@ -165,8 +166,8 @@ namespace Auga
                 __instance.m_pieceSelectionWindow.AddComponent<MovableHudElement>().Init(TextAnchor.MiddleCenter, 0, 0);
 
                 var selectedPiece = __instance.m_buildHud.transform.Find("SelectedPiece");
-                __instance.m_buildSelection = selectedPiece.Find("Name").GetComponent<Text>();
-                __instance.m_pieceDescription = selectedPiece.Find("Info").GetComponent<Text>();
+                __instance.m_buildSelection = selectedPiece.Find("Name").GetComponent<Text>().AsTmp();
+                __instance.m_pieceDescription = selectedPiece.Find("Info").GetComponent<Text>().AsTmp();
                 __instance.m_buildIcon = selectedPiece.Find("Darken/IconBG/PieceIcon").GetComponent<Image>();
                 selectedPiece.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.LowerCenter, 0, 15);
 
@@ -181,8 +182,9 @@ namespace Auga
                 };
             }
             
-            var keyHints = __instance.transform.Replace("hudroot/KeyHints", Auga.Assets.Hud);
-            keyHints.gameObject.AddComponent<MovableHudElement>().Init(TextAnchor.LowerRight, -34, 62);
+            // Current KeyHints requires gamepad bindings absent from the legacy prefab.
+            if (Auga.BuildMenuShow.Value && !Auga.HasSearsCatalog)
+                __instance.gameObject.AddComponent<BuildPresentation>();
 
             var shipHud = __instance.transform.Replace("hudroot/ShipHud", Auga.Assets.Hud);
             __instance.m_shipHudRoot = shipHud.gameObject;
@@ -354,7 +356,7 @@ namespace Auga
                     if (snappingIconForPiece != null)
                     {
                         instance.m_snappingIcon.sprite = snappingIconForPiece;
-                        instance.m_snappingIcon.enabled = snappingIconForPiece != null && (piece.m_category == Piece.PieceCategory.Building || piece.m_groundPiece || piece.m_waterPiece);
+                        instance.m_snappingIcon.enabled = snappingIconForPiece != null && ((piece.m_category == Piece.PieceCategory.BuildingWorkbench || piece.m_category == Piece.PieceCategory.BuildingStonecutter) || piece.m_groundPiece || piece.m_waterPiece);
                     }
                     for (int index = 0; index < instance.m_requirementItems.Length; ++index)
                     {
@@ -456,6 +458,7 @@ namespace Auga
 
         public static void Postfix(Hud __instance)
         {
+            if (__instance.m_crosshair.transform.parent.Find("AugaHoverText") == null) return;
             if (HoverTextPrefab == null)
             {
                 AugaHoverText = __instance.m_crosshair.transform.parent.Find("AugaHoverText");
@@ -679,7 +682,7 @@ namespace Auga
             }
 
             __instance.m_lastPieceCategory = category;
-            __instance.m_pieceBarPosX = __instance.m_pieceBarTargetPosX;
+
             __instance.UpdatePieceBuildStatusAll(buildPieces, player);
 
             return false;

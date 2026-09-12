@@ -35,23 +35,14 @@ namespace AugaUnity
             {
                 _skills.TryGetValue(skillDef.m_skill, out var currentSkillElement);
 
-                if (skills.m_skillData.ContainsKey(skillDef.m_skill))
+                if (currentSkillElement == null)
                 {
-                    if (currentSkillElement == null)
-                    {
-                        var effect = Instantiate(SkillPrefab, SkillsContainer.transform, false);
-                        effect.SkillType = skillDef.m_skill;
-                        _skills.Add(skillDef.m_skill, effect);
-                    }
-                    else
-                    {
-                        currentSkillElement.SetActive(true);
-                    }
+                    var element = Instantiate(SkillPrefab, SkillsContainer.transform, false);
+                    element.SkillType = skillDef.m_skill;
+                    _skills.Add(skillDef.m_skill, element);
+                    element.SetActive(true);
                 }
-                else if (currentSkillElement != null)
-                {
-                    currentSkillElement.SetActive(true);
-                }
+                else currentSkillElement.SetActive(true);
             }
 
             if (_skillsCount != _skills.Count)
@@ -63,7 +54,7 @@ namespace AugaUnity
 
         public virtual void SortSkillElements()
         {
-            var children = SkillsContainer.transform.Cast<Transform>().Select(x => x.GetComponent<SkillsPanelSkillController>()).ToList();
+            var children = SkillsContainer.transform.Cast<Transform>().Select(x => x.GetComponent<SkillsPanelSkillController>()).Where(x => x != null).ToList();
             children.Sort((a, b) => a.SkillType.CompareTo(b.SkillType));
             for (var i = 0; i < children.Count; ++i)
             {

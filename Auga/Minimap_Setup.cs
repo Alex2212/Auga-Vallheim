@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+using GUIFramework;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using AugaUnity;
-using Fishlabs;
+
 using HarmonyLib;
 using JetBrains.Annotations;
 using TMPro;
@@ -13,71 +14,16 @@ using UnityEngine.UI;
 namespace Auga
 {
     [HarmonyPatch(typeof(Minimap), nameof(Minimap.ShowPinNameInput))]
-    static class MinimapShowPinNameInputTranspiler
+    static class MinimapShowPinNameInputPatch
     {
-        private static void AddSubmitAction(Minimap instance)
+        public static void Postfix(Minimap __instance)
         {
-            instance.m_nameInput.GetComponentInChildren<GuiInputFieldSubmit>().m_onSubmit = instance.OnPinTextEntered;
+            __instance.m_nameInput.OnInputSubmit.RemoveListener(__instance.OnPinTextEntered);
+            __instance.m_nameInput.OnInputSubmit.AddListener(__instance.OnPinTextEntered);
         }
-        
-        [UsedImplicitly]
-        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
-        {
-            var instrs = instructions.ToList();
 
-            var counter = 0;
 
-            CodeInstruction LogMessage(CodeInstruction instruction)
-            {
-                //Debug.LogWarning($"VAPOK: IL_{counter}: Opcode: {instruction.opcode} Operand: {instruction.operand}");
-                return instruction;
-            }
-            
-            CodeInstruction FindInstructionWithLabel(List<CodeInstruction> codeInstructions, int index, Label label)
-            {
-                if (index >= codeInstructions.Count)
-                    return null;
-                
-                if (codeInstructions[index].labels.Contains(label))
-                    return codeInstructions[index];
-                
-                return FindInstructionWithLabel(codeInstructions, index + 1, label);
-            }
-
-            var addSubmitMethod = AccessTools.DeclaredMethod(typeof(MinimapShowPinNameInputTranspiler), nameof(AddSubmitAction));
-            var wasFocusedField = AccessTools.DeclaredField(typeof(Minimap), nameof(Minimap.m_wasFocused));
-            
-            for (int i = 0; i < instrs.Count; ++i)
-            {
-                if (i > 6 && instrs[i].opcode == OpCodes.Ldarg_0 && instrs[i+1].opcode == OpCodes.Ldc_I4_1 && 
-                    instrs[i+2].opcode == OpCodes.Stfld && instrs[i+2].operand.Equals(wasFocusedField) )
-                {
-                    //Call Method needs Minimap Instance as parameter
-                    var ldArgInstruction = new CodeInstruction(OpCodes.Ldarg_0);
-                    //Move Any Labels from the instruction position being patched to new instruction.
-                    if (instrs[i].labels.Count > 0)
-                        instrs[i].MoveLabelsTo(ldArgInstruction);
-                    //Output LdArg
-                    yield return LogMessage(ldArgInstruction);
-                    counter++;
-
-                    //Output Call
-                    yield return LogMessage(new CodeInstruction(OpCodes.Call, addSubmitMethod));
-                    counter++;
-
-                    //Output Current Operation
-                    yield return LogMessage(instrs[i]);
-                    counter++;
-                }
-                else
-                {
-                    yield return LogMessage(instrs[i]);
-                    counter++;
-                }
-            }
-        }
     }
-
     [HarmonyPatch(typeof(Minimap))]
     public static class Minimap_Setup
     {
@@ -170,7 +116,7 @@ namespace Auga
             SetRightClickListener(newMap.transform, "IconDeath", minimap.OnAltPressedIconDeath);
 
             var mapInputHandler = minimap.m_mapImageLarge.GetComponent<UIInputHandler>();
-            mapInputHandler.m_onRightClick += minimap.OnMapRightClick;
+            // Current Minimap handles secondary input in its update loop.
             mapInputHandler.m_onMiddleClick += minimap.OnMapMiddleClick;
             mapInputHandler.m_onLeftDown += minimap.OnMapLeftDown;
             mapInputHandler.m_onLeftUp += minimap.OnMapLeftUp;

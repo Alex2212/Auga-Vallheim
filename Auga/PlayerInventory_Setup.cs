@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using AugaUnity;
 using HarmonyLib;
 using UnityEngine;
@@ -31,16 +31,16 @@ namespace Auga
                 __instance.m_playerGrid = playerInventory.Find("PlayerGrid").GetComponent<InventoryGrid>();
                 __instance.m_playerGrid.m_onSelected += __instance.OnSelectedItem;
                 __instance.m_playerGrid.m_onRightClick += __instance.OnRightClickItem;
-                __instance.m_weight = playerInventory.Find("Weight/Text").GetComponent<Text>();
-                __instance.m_armor = playerInventory.Find("Armor/Text").GetComponent<Text>();
+                __instance.m_weight = playerInventory.Find("Weight/Text").GetComponent<Text>().AsTmp();
+                __instance.m_armor = playerInventory.Find("Armor/Text").GetComponent<Text>().AsTmp();
 
                 var containerInventory = __instance.Replace("root/Container", Auga.Assets.InventoryScreen, "root/Container");
                 __instance.m_container = containerInventory.RectTransform();
-                __instance.m_containerName = containerInventory.Find("ContainerHeader/Name").GetComponent<Text>();
+                __instance.m_containerName = containerInventory.Find("ContainerHeader/Name").GetComponent<Text>().AsTmp();
                 __instance.m_containerGrid = containerInventory.Find("ContainerGrid").GetComponent<InventoryGrid>();
                 __instance.m_containerGrid.m_onSelected += __instance.OnSelectedItem;
                 __instance.m_containerGrid.m_onRightClick += __instance.OnRightClickItem;
-                __instance.m_containerWeight = containerInventory.Find("Weight/Text").GetComponent<Text>();
+                __instance.m_containerWeight = containerInventory.Find("Weight/Text").GetComponent<Text>().AsTmp();
                 __instance.m_takeAllButton = containerInventory.Find("TakeAll").GetComponent<ColorButtonText>();
                 __instance.m_takeAllButton.onClick.AddListener(__instance.OnTakeAll);
                 
@@ -65,17 +65,17 @@ namespace Auga
                 rightPanel.SetSiblingIndex(craftingPanelSiblingIndex);
                 CraftingPanel = rightPanel.GetComponentInChildren<AugaCraftingPanel>(true);
                 CraftingPanel.SetMultiCraftEnabled(Auga.HasMultiCraft);
-                __instance.m_playerName = rightPanel.Find("DefaultContent/TitleContainer/PlayerPanelTitle").GetComponent<Text>();
+                __instance.m_playerName = rightPanel.Find("DefaultContent/TitleContainer/PlayerPanelTitle").GetComponent<Text>().AsTmp();
                 __instance.m_pvp = rightPanel.Find("TabContent/TabContent_PVP/Dummy/PVPToggle").GetComponent<Toggle>();
                 __instance.m_recipeElementPrefab = CraftingPanel.RecipeItemPrefab;
                 __instance.m_recipeListRoot = CraftingPanel.RecipeList;
                 __instance.m_recipeListScroll = CraftingPanel.RecipeListScrollbar;
                 __instance.m_recipeEnsureVisible = CraftingPanel.RecipeListEnsureVisible;
                 __instance.m_recipeListSpace = 34;
-                __instance.m_craftingStationName = CraftingPanel.WorkbenchName;
+                __instance.m_craftingStationName = CraftingPanel.WorkbenchName.AsTmp();
                 __instance.m_craftingStationIcon = CraftingPanel.WorkbenchIcon;
                 __instance.m_craftingStationLevelRoot = CraftingPanel.WorkbenchLevelRoot;
-                __instance.m_craftingStationLevel = CraftingPanel.WorkbenchLevel;
+                __instance.m_craftingStationLevel = CraftingPanel.WorkbenchLevel.AsTmp();
                 __instance.m_craftButton = CraftingPanel.CraftButton;
                 __instance.m_craftButton.onClick.AddListener(__instance.OnCraftPressed);
                 __instance.m_craftCancelButton = CraftingPanel.CraftCancelButton;
@@ -92,8 +92,8 @@ namespace Auga
                 __instance.m_repairButton.onClick.AddListener(__instance.OnRepairPressed);
 
                 __instance.m_recipeIcon = CraftingPanel.DummyIcon;
-                __instance.m_recipeName = CraftingPanel.DummyName;
-                __instance.m_recipeDecription = CraftingPanel.DummyDescription;
+                __instance.m_recipeName = CraftingPanel.DummyName.AsTmp();
+                __instance.m_recipeDecription = CraftingPanel.DummyDescription.AsTmp();
                 __instance.m_repairPanelSelection = CraftingPanel.DummyRepairPanelSelection;
                 __instance.m_tabCraft = CraftingPanel.DummyCraftTabButton;
                 __instance.m_tabUpgrade = CraftingPanel.DummyUpgradeTabButton;
@@ -109,19 +109,7 @@ namespace Auga
                 info.Find("Texts").GetComponent<Button>().onClick.AddListener(__instance.OnOpenTexts);
                 info.Find("Trophies").GetComponent<Button>().onClick.AddListener(__instance.OnOpenTrophies);*/
 
-                var splitDialog = __instance.Replace("root/SplitDialog", Auga.Assets.InventoryScreen, "root/SplitDialog");
-                __instance.m_splitPanel = splitDialog;
-                __instance.m_splitSlider = splitDialog.Find("Dialog/Slider").GetComponent<Slider>();
-                __instance.m_splitAmount = splitDialog.Find("Dialog/InventoryElement/amount").GetComponent<Text>();
-                __instance.m_splitCancelButton = splitDialog.Find("Dialog/ButtonCancel").GetComponent<Button>();
-                __instance.m_splitOkButton = splitDialog.Find("Dialog/ButtonOk").GetComponent<Button>();
-                __instance.m_splitIcon = splitDialog.Find("Dialog/InventoryElement/icon").GetComponent<Image>();
-                __instance.m_splitIconName = splitDialog.Find("Dialog/InventoryElement/DummyText").GetComponent<Text>();
-
-                __instance.m_splitSlider.onValueChanged.AddListener(__instance.OnSplitSliderChanged);
-                __instance.m_splitCancelButton.onClick.AddListener(__instance.OnSplitCancel);
-                __instance.m_splitOkButton.onClick.AddListener(__instance.OnSplitOk);
-
+                // Keep the native SplitDialog until the legacy prefab is migrated.
                 __instance.m_uiGroups = new [] {
                     containerInventory.GetComponent<UIGroupHandler>(),
                     playerInventory.GetComponent<UIGroupHandler>(),
@@ -160,9 +148,9 @@ namespace Auga
                 //Vector2 startPos = new Vector2(__instance.RectTransform().rect.width / 2f, 0.0f) - new Vector2(__instance.GetWidgetSize().x, 0.0f) * 0.5f;
                 foreach (var element in __instance.m_elements)
                 {
-                    var itemTooltip = element.m_go.GetComponent<ItemTooltip>();
+                    var itemTooltip = element.gameObject.GetComponent<ItemTooltip>();
                     
-                    var item = __instance.m_inventory.GetItemAt(element.m_pos.x, element.m_pos.y);
+                    var item = __instance.m_inventory.GetItemAt(element.Position.x, element.Position.y);
                     
                     if (itemTooltip != null && !element.m_used)
                     {
@@ -176,15 +164,15 @@ namespace Auga
 
                     if (__instance.name == "PlayerGrid")
                     {
-                        if (element.m_pos.y == 0)
+                        if (element.Position.y == 0)
                         {
-                            element.m_go.transform.SetParent(TopRowInventory);
+                            element.gameObject.transform.SetParent(TopRowInventory);
                         }
                         else
                         {
-                            element.m_go.transform.SetParent(MainRowsInventory);
-                            //Vector2 currentPosition = new Vector3(element.m_pos.x * (__instance.m_elementSpace), (element.m_pos.y * -__instance.m_elementSpace) - 26);
-                            //element.m_go.RectTransform().anchoredPosition = startPos + currentPosition;
+                            element.gameObject.transform.SetParent(MainRowsInventory);
+                            //Vector2 currentPosition = new Vector3(element.Position.x * (__instance.m_elementSpace), (element.Position.y * -__instance.m_elementSpace) - 26);
+                            //element.gameObject.RectTransform().anchoredPosition = startPos + currentPosition;
                         }
                     }
                 }
@@ -226,7 +214,7 @@ namespace Auga
             {
                 if (CraftingPanel != null)
                 {
-                    CraftingPanel.SetRecipe(__instance.m_selectedRecipe.Key, __instance.m_selectedRecipe.Value, __instance.m_selectedVariant);
+                    CraftingPanel.SetRecipe(__instance.m_selectedRecipe.Recipe, __instance.m_selectedRecipe.ItemData, __instance.m_selectedVariant);
                 }
             }
         }
@@ -250,7 +238,7 @@ namespace Auga
             {
                 if (CraftingPanel != null)
                 {
-                    CraftingPanel.SetRecipe(__instance.m_selectedRecipe.Key, __instance.m_selectedRecipe.Value, __instance.m_selectedVariant);
+                    CraftingPanel.SetRecipe(__instance.m_selectedRecipe.Recipe, __instance.m_selectedRecipe.ItemData, __instance.m_selectedVariant);
                 }
             }
         }
@@ -262,7 +250,7 @@ namespace Auga
             {
                 if (CraftingPanel != null)
                 {
-                    CraftingPanel.PostSetupRequirementList(__instance.m_selectedRecipe.Key, __instance.m_selectedRecipe.Value, quality, player, allowedQuality);
+                    CraftingPanel.PostSetupRequirementList(__instance.m_selectedRecipe.Recipe, __instance.m_selectedRecipe.ItemData, quality, player, allowedQuality);
                 }
             }
         }
