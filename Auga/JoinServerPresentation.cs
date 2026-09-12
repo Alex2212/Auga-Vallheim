@@ -341,6 +341,7 @@ namespace Auga
             var border = Box(rect, "Auga Add Server Action", Color.white).GetComponent<Image>();
             var source = Auga.Assets.ButtonFancy.GetComponent<Button>().targetGraphic as Image;
             border.sprite = source.sprite; border.type = source.type; border.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+            StyleButtonStates(button, border);
             foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
             {
                 if (Hint(label.transform)) continue;

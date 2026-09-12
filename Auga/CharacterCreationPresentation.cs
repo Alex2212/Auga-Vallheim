@@ -151,8 +151,7 @@ namespace Auga
                     _hidden.AddRange(button.GetComponentsInChildren<Image>(true));
                     StyleButton(button, panel, button == startup.m_csNewCharacterCancel ? -110 : 110, 42, 200, true, _body, _norse);
                     var border = (Image)button.targetGraphic;
-                    // Native button animations may replace their target sprite. Keep an independent border.
-                    button.targetGraphic = button.GetComponent<Image>();
+                    // Shared styling clears native sprite states; keep hover on the visible border.
                     _actions.Add((button, border));
                     var tint = button.GetComponent<ButtonTextColor>(); if (tint != null) { tint.m_defaultColor = tint.m_defaultMeshColor = Cream; tint.m_disabledColor = Muted; }
                 }

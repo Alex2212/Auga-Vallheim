@@ -514,3 +514,15 @@ No deployment or launch occurred. Runtime tests must wait for a successful build
 - docs/LEGACY-API.md documents restored behavior, ownership, limits, lifecycle, and genuinely superseded integration mechanisms. The SDK example demonstrates player/workbench tabs and variants.
 - Full SDK validation passed: runtime/shim/example builds, compiled contract parity, and 13 bridge checks (test-artifacts/api-restored-sdk-validation.log). Packaged example also built against installed non-publicized references (test-artifacts/api-restored-sdk-example.log). Existing assembly/TMP warnings remain.
 - No API deployment or publication performed. Valheim is closed; restored Unity tab/dialog interactions have not been tested in-game.
+
+### Remove-character confirmation presentation
+- Styled the separate native remove-character dialog with Auga background/corners, Nordic text, and original fancy button artwork. Native labels, character name, button placement, navigation, and callbacks are retained.
+- Build passed with zero errors and six warnings (test-artifacts/remove-character-dialog-build.log). Deployed to Auga-Dev and restarted Valheim. Visual confirmation remains pending; no character deletion was exercised.
+
+### Remove-character confirmation hover
+- Replaced native SpriteSwap with Auga color tint for hover, selection, and press; cleared native sprite overrides so both buttons retain ornate artwork.
+- Build passed (zero errors, five existing warnings), deployed to Auga-Dev and restarted. Hover appearance still requires visual verification.
+
+### Button hover style audit
+- Centralized ornate button states: clear native SpriteSwap overrides and use Auga hover/selection/press tints. Applied to shared character/world actions, character deletion, UnifiedPopup confirmations, save actions, inventory actions, and Add Server dialog actions. Character creation now targets its visible border.
+- Build passed with zero errors and five existing warnings (test-artifacts/hover-style-audit-build.log). Deployed to Auga-Dev and restarted. Visual checks across these screens remain pending.

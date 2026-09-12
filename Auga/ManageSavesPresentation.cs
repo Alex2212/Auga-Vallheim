@@ -98,6 +98,7 @@ namespace Auga
                     var bg = Box(button.transform, "Auga Save Action", Color.white).GetComponent<Image>();
                     var source = (button == gui.backButton || button == gui.actionButton ? Auga.Assets.ButtonFancy : Auga.Assets.ButtonMedium).GetComponent<Button>().targetGraphic as Image;
                     bg.sprite = source.sprite; bg.type = source.type; bg.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+                    StyleButtonStates(button, bg);
                     _actions.Add((button, bg));
                     var colors = button.colors; colors.normalColor = Color.white;
                     colors.highlightedColor = colors.selectedColor = new Color(1, .83f, .5f);

@@ -50,6 +50,7 @@ namespace Auga
                     var bg = Box(button.transform, "Auga Popup Button", Color.white).GetComponent<Image>();
                     var source = Auga.Assets.ButtonFancy.GetComponent<Button>().targetGraphic as Image;
                     bg.sprite = source.sprite; bg.type = source.type; bg.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+                    StyleButtonStates(button, bg);
                     foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
                     {
                         if (label.transform.parent.name.StartsWith("gamepad_hint")) continue;

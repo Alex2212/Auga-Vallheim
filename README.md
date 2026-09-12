@@ -1,7 +1,11 @@
-﻿# Project Auga
+# Project Auga
 ##### by RandyKnapp / n4
 
 Project Auga is a completely re-imagined, modder-friendly UI-overhaul for Valheim. Every last piece of UI was considered and reworked from the ground-up to create a more helpful and immersive player experience, all while remaining familiar to Valheim veterans.
+
+[![Project Auga main menu](screenshots/mainmenu.png)](screenshots/mainmenu.png)
+
+[View all 26 screenshots](screenshots/README.md) ? [Build and setup](README-SETUP.md) ? [Modding guide](docs/MODDING.md)
 
 ## What's Changed?
 
@@ -14,7 +18,23 @@ Basically everything:
   * Overhauled Loading Screens
   * Auga-Style EVERYTHING
 
-SEE SCREENSHOTS HERE: https://github.com/RandyKnapp/Auga/tree/main/Auga/Screenshots
+## Screenshots
+
+A look at this port's UI in-game. Select an image to view it at full resolution.
+
+| Inventory and crafting | Containers |
+| --- | --- |
+| [![Inventory and crafting panel](screenshots/game_crafting_inv.png)](screenshots/game_crafting_inv.png) | [![Inventory and chest](screenshots/chest.png)](screenshots/chest.png) |
+
+| Building | Character selection |
+| --- | --- |
+| [![Building menu with categories and pieces](screenshots/hammer.png)](screenshots/hammer.png) | [![Character selection with portraits and statistics](screenshots/select-character.png)](screenshots/select-character.png) |
+
+| Compendium | Settings |
+| --- | --- |
+| [![Compendium trophies](screenshots/trophies.png)](screenshots/trophies.png) | [![Controller settings](screenshots/settings-controller.png)](screenshots/settings-controller.png) |
+
+Browse the **[complete screenshot gallery](screenshots/README.md)** for the HUD, workbench, upgrades, skills, lore, server browser, save management, and all settings tabs.
 
 ## How to Install
 

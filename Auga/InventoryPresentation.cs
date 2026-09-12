@@ -681,6 +681,7 @@ namespace Auga
             var bg = Box(button.transform, "Auga Inventory Action", Color.white).GetComponent<Image>();
             var source = Auga.Assets.ButtonFancy.GetComponent<Button>().targetGraphic as Image;
             bg.sprite = source.sprite; bg.type = source.type; bg.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+            StyleButtonStates(button, bg);
             ((RectTransform)button.transform).SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 44);
             foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
             {

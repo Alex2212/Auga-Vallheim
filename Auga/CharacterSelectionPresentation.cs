@@ -88,6 +88,7 @@ namespace Auga
                 StyleButton(manage, panel, 0f, 96f, 220f, false);
                 StyleButton(back, panel, -110f, 42f, 200f, true);
                 StyleButton(_startup.m_csStartButton, panel, 110f, 42f, 200f, true);
+                StyleRemoveConfirmation();
                 Refresh();
                 Debug.Log("[Auga] Character selection presentation applied; native profile actions retained.");
             }
@@ -95,6 +96,43 @@ namespace Auga
             {
                 Auga.LogError($"Character selection presentation failed: {exception}");
                 enabled = false;
+            }
+        }
+
+        private void StyleRemoveConfirmation()
+        {
+            var dialog = _startup.m_removeCharacterDialog.transform;
+            // This dialog predates UnifiedPopup, so its presentation needs its own pass.
+            foreach (var image in dialog.GetComponentsInChildren<Image>(true))
+            {
+                if (image.GetComponentInParent<Button>(true) != null || image.sprite == null ||
+                    image.sprite.name.IndexOf("woodpanel", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                var background = Box(image.transform, "Auga Remove Character Panel", new Color(.22f, .20f, .165f, .98f));
+                background.SetAsFirstSibling();
+                SettingsPresentation.AddCorners(background);
+                image.enabled = false;
+            }
+            foreach (var label in dialog.GetComponentsInChildren<TMP_Text>(true))
+            {
+                label.font = _norse;
+                label.fontSharedMaterial = _norse.material;
+                label.color = Cream;
+            }
+            foreach (var button in dialog.GetComponentsInChildren<Button>(true))
+            {
+                // Keep native positioning, navigation and persistent confirmation callbacks.
+                foreach (var image in button.GetComponentsInChildren<Image>(true)) image.enabled = false;
+                var background = Box(button.transform, "Auga Confirmation Button", Color.white);
+                background.SetAsFirstSibling();
+                var target = background.GetComponent<Image>();
+                var source = Auga.Assets.ButtonFancy.GetComponent<Button>().targetGraphic as Image;
+                target.sprite = source.sprite;
+                target.type = source.type;
+                target.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
+                StyleButtonStates(button, target);
+                foreach (var label in button.GetComponentsInChildren<TMP_Text>(true)) label.fontSize = 26;
+                var tint = button.GetComponent<ButtonTextColor>();
+                if (tint != null) tint.m_defaultColor = tint.m_defaultMeshColor = Cream;
             }
         }
 
@@ -251,13 +289,7 @@ namespace Auga
             target.sprite = source.sprite;
             target.type = source.type;
             target.pixelsPerUnitMultiplier = source.pixelsPerUnitMultiplier;
-            button.targetGraphic = target;
-            button.transition = Selectable.Transition.ColorTint;
-            var colors = button.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = colors.selectedColor = new Color(1f, .83f, .5f);
-            colors.pressedColor = new Color(.75f, .6f, .3f);
-            button.colors = colors;
+            StyleButtonStates(button, target);
             foreach (var label in button.GetComponentsInChildren<TMP_Text>(true))
             {
                 label.font = fancy ? norse : body;
@@ -270,6 +302,21 @@ namespace Auga
                 label.rectTransform.localScale = Vector3.one;
                 Place(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(16f, 0f), new Vector2(-16f, 0f));
             }
+        }
+
+        internal static void StyleButtonStates(Button button, Image artwork)
+        {
+            // SpriteSwap retains native hover/focus images even after artwork is replaced.
+            button.transition = Selectable.Transition.ColorTint;
+            button.spriteState = default;
+            artwork.overrideSprite = null;
+            button.targetGraphic = artwork;
+            var colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = colors.selectedColor = new Color(1f, .83f, .5f);
+            colors.pressedColor = new Color(.75f, .6f, .3f);
+            colors.disabledColor = new Color(.55f, .55f, .55f);
+            button.colors = colors;
         }
 
         private TMP_Text Label(Transform parent, string text, TMP_FontAsset font, float size, TextAlignmentOptions alignment)
