@@ -741,7 +741,7 @@ namespace Auga
             var skills = UnityEngine.Object.Instantiate(skillsSource, frame, false);
             _skillsPanel = skills.gameObject;
             foreach (var scroll in skills.GetComponentsInChildren<ScrollRect>(true))
-                scroll.scrollSensitivity = 240f;
+
             Place((RectTransform)skills, Vector2.zero, Vector2.one, new Vector2(18, 40), new Vector2(-18, -140));
             skills.gameObject.SetActive(false);
             var logSource = Auga.Assets.InventoryScreen.GetComponentsInChildren<Transform>(true).First(t => t.name == "TabContent_MessageLog");

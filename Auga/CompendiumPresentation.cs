@@ -34,7 +34,7 @@ namespace Auga
                 group.m_defaultElement = controller.TabController.m_tabs[0].m_button.gameObject;
                 controller.GetComponent<CanvasGroup>().ignoreParentGroups = true;
                 foreach (var scroll in controller.GetComponentsInChildren<ScrollRect>(true))
-                    scroll.scrollSensitivity = 120f;
+
                 foreach (var dialog in controller.GetComponentsInChildren<TextsDialog>(true))
                 {
                     var labels = dialog.GetComponentsInChildren<Text>(true);

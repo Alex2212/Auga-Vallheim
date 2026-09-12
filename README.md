@@ -5,7 +5,7 @@ Project Auga is a completely re-imagined, modder-friendly UI-overhaul for Valhei
 
 [![Project Auga main menu](screenshots/mainmenu.png)](screenshots/mainmenu.png)
 
-[View all 26 screenshots](screenshots/README.md) ? [Build and setup](README-SETUP.md) ? [Modding guide](docs/MODDING.md)
+[View all 27 screenshots](screenshots/README.md) | [Build and setup](README-SETUP.md) | [Modding guide](docs/MODDING.md)
 
 ## What's Changed?
 
@@ -35,6 +35,14 @@ A look at this port's UI in-game. Select an image to view it at full resolution.
 | [![Compendium trophies](screenshots/trophies.png)](screenshots/trophies.png) | [![Controller settings](screenshots/settings-controller.png)](screenshots/settings-controller.png) |
 
 Browse the **[complete screenshot gallery](screenshots/README.md)** for the HUD, workbench, upgrades, skills, lore, server browser, save management, and all settings tabs.
+
+## Accessibility and character creation
+
+**Settings > Accessibility > Scroll Speed** controls mouse-wheel scrolling across the UI. The default is **10x**, adjustable from **1x to 20x**. Save settings to apply the value; Back discards an unsaved change. See [UI settings](docs/UI-SETTINGS.md) for configuration details.
+
+New Character uses the original Auga layout: a name field, gender icons, gradient appearance sliders, and a five-column Hair/Beard portrait grid. Confirmation and action buttons retain Auga artwork when hovered or selected.
+
+[![New Character with appearance sliders and hair portrait grid](screenshots/character_creation.png)](screenshots/character_creation.png)
 
 ## How to Install
 

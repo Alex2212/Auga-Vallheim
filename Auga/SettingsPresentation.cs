@@ -23,6 +23,15 @@ namespace Auga
         private static void Prefix(Settings __instance) => __instance.GetComponent<SettingsPresentation>()?.SaveClock();
     }
 
+    [HarmonyPatch(typeof(ScrollRect), nameof(ScrollRect.OnScroll))]
+    public static class GlobalScrollSpeedPatch
+    {
+        private static void Prefix(ScrollRect __instance)
+        {
+            if (Auga.ScrollSpeed != null) __instance.scrollSensitivity = 40f * Auga.ScrollSpeed.Value;
+        }
+    }
+
     // Retain the current settings tabs, values, callbacks and save/cancel behavior.
     public sealed class SettingsPresentation : MonoBehaviour
     {
@@ -33,10 +42,12 @@ namespace Auga
         private static readonly Color Gold = new Color(0.72f, 0.56f, 0.19f);
         private static readonly Color Panel = new Color(0.22f, 0.20f, 0.165f, 0.98f);
         private Toggle _showClock;
+        private Slider _scrollSpeed;
 
         public void SaveClock()
         {
             if (_showClock != null) Auga.ShowClock.Value = _showClock.isOn;
+            if (_scrollSpeed != null) Auga.ScrollSpeed.Value = Mathf.RoundToInt(_scrollSpeed.value);
         }
 
         private void AddClockSetting()
@@ -65,12 +76,68 @@ namespace Auga
             var navigation = _showClock.navigation; navigation.mode = Navigation.Mode.Automatic; _showClock.navigation = navigation;
         }
 
+        private void AddScrollSpeedSetting()
+        {
+            var accessibility = GetComponentInChildren<Valheim.SettingsGui.AccessibilitySettings>(true);
+            if (accessibility == null) return;
+            var source = accessibility.m_guiScaleSlider;
+            var parent = (RectTransform)source.transform.parent;
+            Canvas.ForceUpdateCanvases();
+            float bottom = float.MaxValue;
+            var corners = new Vector3[4];
+            foreach (var control in accessibility.GetComponentsInChildren<Selectable>(true))
+            {
+                ((RectTransform)control.transform).GetWorldCorners(corners);
+                bottom = Mathf.Min(bottom, parent.InverseTransformPoint(corners[0]).y);
+            }
+            var row = new GameObject("Auga Scroll Speed", typeof(RectTransform));
+            row.layer = parent.gameObject.layer;
+            var rect = (RectTransform)row.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = new Vector2(0, 1); rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(.5f, 1);
+            rect.sizeDelta = new Vector2(0, 36);
+            rect.anchoredPosition = new Vector2(0, bottom - parent.rect.yMax - 12);
+            row.AddComponent<LayoutElement>().preferredHeight = 36;
+            _scrollSpeed = Instantiate(source, rect, false);
+            _scrollSpeed.name = "Scroll Speed Slider";
+            _scrollSpeed.onValueChanged = new Slider.SliderEvent();
+            _scrollSpeed.minValue = 1; _scrollSpeed.maxValue = 20; _scrollSpeed.wholeNumbers = true;
+            _scrollSpeed.SetValueWithoutNotify(Auga.ScrollSpeed.Value);
+            void AlignRow(RectTransform target, RectTransform template)
+            {
+                target.anchorMin = new Vector2(template.anchorMin.x, .5f);
+                target.anchorMax = new Vector2(template.anchorMax.x, .5f);
+                target.pivot = new Vector2(template.pivot.x, .5f);
+                target.sizeDelta = new Vector2(template.sizeDelta.x, 36);
+                target.anchoredPosition = new Vector2(template.anchoredPosition.x, 0);
+            }
+            AlignRow((RectTransform)_scrollSpeed.transform, (RectTransform)source.transform);
+            foreach (var text in _scrollSpeed.GetComponentsInChildren<TMP_Text>(true)) text.gameObject.SetActive(false);
+            var captionTemplate = parent.GetComponentsInChildren<TMP_Text>(true)
+                .Where(text => text != accessibility.m_guiScaleText && !text.transform.IsChildOf(rect) && !text.transform.IsChildOf(source.transform))
+                .OrderBy(text => Mathf.Abs(text.transform.position.y - source.transform.position.y)).First();
+            TMP_Text Label(string name, string caption, TMP_Text template)
+            {
+                var label = Instantiate(template, rect, false);
+                label.name = name; label.text = caption; label.raycastTarget = false;
+                AlignRow(label.rectTransform, template.rectTransform);
+                return label;
+            }
+            Label("Scroll Speed Label", "SCROLL SPEED", captionTemplate);
+            var value = Label("Scroll Speed Value", Auga.ScrollSpeed.Value + "x", accessibility.m_guiScaleText);
+            _scrollSpeed.onValueChanged.AddListener(speed => value.text = Mathf.RoundToInt(speed) + "x");
+            foreach (var tooltip in _scrollSpeed.GetComponentsInChildren<UITooltip>(true))
+            { tooltip.m_topic = "SCROLL SPEED"; tooltip.m_text = "Mouse-wheel speed for all scroll lists. Applied when settings are saved."; }
+        }
+
         private void Start()
         {
             try
             {
                 var settings = GetComponent<Settings>();
                 AddClockSetting();
+                AddScrollSpeedSetting();
                 var root = settings.m_settingsPanel.transform;
                 if (_bodyFont == null) _bodyFont = TMP_FontAsset.CreateFontAsset(Auga.Assets.SourceSansProSemiBold);
                 if (_labelFont == null) _labelFont = TMP_FontAsset.CreateFontAsset(Auga.Assets.SourceSansProBold);

@@ -526,3 +526,23 @@ No deployment or launch occurred. Runtime tests must wait for a successful build
 ### Button hover style audit
 - Centralized ornate button states: clear native SpriteSwap overrides and use Auga hover/selection/press tints. Applied to shared character/world actions, character deletion, UnifiedPopup confirmations, save actions, inventory actions, and Add Server dialog actions. Character creation now targets its visible border.
 - Build passed with zero errors and five existing warnings (test-artifacts/hover-style-audit-build.log). Deployed to Auga-Dev and restarted. Visual checks across these screens remain pending.
+
+### Original new-character presentation
+- Restored the original Auga panel, gradient sliders, gender toggles, Hair/Beard portrait grid, and layout. Retained native customization, TMP name input, validation, and Done/Cancel callbacks. Updated portrait camera null guards and resource cleanup; initially hide candidate hair renderers.
+- User screenshot confirms the five-column portrait grid renders. Follow-up localizes legacy labels, uses body font for the name field, and increases portrait ScrollRect sensitivity from 40 to 240 (6x).
+- Build passed with zero errors and six warnings; deployed and restarted. Final text/scroll responsiveness, gender/tab switching, and controller navigation require further in-game verification. No character was created or deleted during agent checks.
+
+### Character name field text inset
+- Inset the native TMP viewport by 30 units horizontally and 4 vertically; align placeholder and typed text centrally to the left inside the ornaments. Caret and clipping remain owned by the native input.
+- Build passed with zero errors and five existing warnings (test-artifacts/character-name-inset-build.log). Deployed to Auga-Dev and restarted; final visual check pending.
+
+- User follow-up: portrait scroll sensitivity is now 400 (10x the original 40). Build passed with zero errors and five warnings; deployed and restarted (test-artifacts/character-scroll-10x-build.log).
+
+### Global accessibility scroll speed
+- Single persisted Accessibility.ScrollSpeed setting, default 10, range 1-20. Settings Accessibility slider saves through ApplyAndClose; Back leaves the saved value unchanged. One ScrollRect.OnScroll hook applies 40 times the multiplier to existing and future lists, replacing the portrait/skills/compendium overrides.
+- User screenshot verifies the control appears at 10x. Follow-up aligns label, track, and value using Scale GUI row geometry. Final alignment, save/cancel persistence and cross-screen wheel behavior require live verification.
+- Updated README, docs/UI-SETTINGS.md, modding guide, and SDK documentation manifest. Full SDK validation passed, including compiled contract parity and 13 bridge checks. Build has five existing warnings. Deployed to Auga-Dev and restarted.
+
+### Nexus release packaging
+- Added scripts/Package-Nexus.ps1: validates SDK/runtime and bridge checks, builds Release, and produces separate Nexus main-mod and optional SDK archives in .build/nexus. Includes translations, install README, UI settings docs, API DLL/source/reference/example, and SHA256 checksums. Explicit manifests exclude game assemblies and local artifacts.
+- Executed successfully (test-artifacts/nexus-package-validation.log); archive manifest validation passed. No upload or deployment performed.

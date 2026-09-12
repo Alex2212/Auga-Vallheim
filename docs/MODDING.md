@@ -134,3 +134,7 @@ Edit the runtime methods in `API.cs`, then regenerate `API.External.cs` and `API
 Automated checks cover absent/late runtime loading, exact overload and null selection, enum-array conversion, DTO conversion/reference identity, delegate forwarding, old-runtime probes, missing-method errors and exception propagation. Compiled parity checks cover the actual game-facing API surface. These do not simulate Unity pointer events.
 
 Before publishing an integration, test without Auga, with this Auga build, after logout/rejoin, with repeated inventory/tab opening, and with mouse/controller input. Verify cleanup, hover targets and UI placement in game. The new example and API UI changes are build-verified; in-game example interaction remains a manual validation step.
+
+## Shared scroll behavior
+
+The [global accessibility scroll setting](UI-SETTINGS.md) also covers mod-created Unity `ScrollRect` lists. Auga sets wheel sensitivity at `ScrollRect.OnScroll` from its saved multiplier (default 10, range 1?20; 40 UI units per multiplier unit). Do not assign a separate wheel speed when you want to follow the player's preference. This does not change drag gestures or custom scrolling implementations.

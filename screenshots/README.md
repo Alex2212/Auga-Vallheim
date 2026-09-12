@@ -14,6 +14,10 @@ Screenshots of this port in-game. Select any image to open the original at full 
 
 [![Character selection](select-character.png)](select-character.png)
 
+### Character creation
+
+[![Character creation with appearance sliders and hair portraits](character_creation.png)](character_creation.png)
+
 ### World selection
 
 [![World selection](world_select.png)](world_select.png)

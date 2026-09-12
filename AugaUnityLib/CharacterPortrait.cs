@@ -44,6 +44,11 @@ namespace AugaUnity
             _currentMode = Mode;
         }
 
+        public void OnDestroy()
+        {
+            if (_camera != null) Destroy(_camera.gameObject);
+        }
+
         public void SwitchToHairMode()
         {
             Mode = PortraitMode.Hair;
@@ -59,14 +64,17 @@ namespace AugaUnity
             var camera = Instantiate(FejdStartup.instance.m_mainCamera.GetComponent<Camera>());
             camera.fieldOfView = FOV;
             camera.targetTexture = renderTexture;
-            camera.GetComponent<DepthOfField>().enabled = false;
+            var depthOfField = camera.GetComponent<DepthOfField>();
+            if (depthOfField != null) depthOfField.enabled = false;
+            var listener = camera.GetComponent<AudioListener>();
+            if (listener != null) Destroy(listener);
             camera.enabled = false;
 
             camera.transform.position = FejdStartup.instance.m_cameraMarkerCharacter.position;
             camera.transform.rotation = FejdStartup.instance.m_cameraMarkerCharacter.rotation;
 
             var postProcessing = camera.GetComponent<PostProcessingBehaviour>();
-            postProcessing.profile = profile;
+            if (postProcessing != null && profile != null) postProcessing.profile = profile;
 
             return camera;
         }
@@ -106,7 +114,9 @@ namespace AugaUnity
 
         public void Update()
         {
+            if (FejdStartup.instance.m_playerInstance == null || _playerCustomizaton == null) return;
             var newLookTarget = Utils.FindChild(FejdStartup.instance.m_playerInstance.transform, "Head");
+            if (newLookTarget == null) return;
             if (_characterPortraits.Count == 0 || _lookTarget != newLookTarget || _currentMode != Mode)
             {
                 InitializeChraracterPortraits();
@@ -160,6 +170,7 @@ namespace AugaUnity
 
             _attachedItem = visEquip.AttachItem(itemHash, 0, visEquip.m_helmet);
             _renderers = _attachedItem != null ? _attachedItem.GetComponentsInChildren<Renderer>().ToList() : new List<Renderer>();
+            foreach (var renderer in _renderers) renderer.forceRenderingOff = true;
         }
 
         public void DoRender(VisEquipment visEquip, Camera camera)
@@ -197,7 +208,7 @@ namespace AugaUnity
         [UsedImplicitly]
         public void OnDestroy()
         {
-            _renderers.Clear();
+            _renderers?.Clear();
             Destroy(_attachedItem);
             Destroy(_texture);
         }

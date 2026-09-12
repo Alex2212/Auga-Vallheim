@@ -110,6 +110,7 @@ namespace Auga
         
         public static ConfigEntry<bool> BuildMenuShow;
         public static ConfigEntry<bool> ShowClock;
+        public static ConfigEntry<int> ScrollSpeed;
         internal static readonly bool LegacyBuildMenuSupported = false;
         public static ConfigEntry<bool> AugaChatShow;
 
@@ -363,6 +364,7 @@ namespace Auga
             _loggingEnabled = Config.Bind("Logging", "LoggingEnabled", false, "Enable logging");
             _logLevel = Config.Bind("Logging", "LogLevel", LogLevel.Info, "Only log messages of the selected level or higher");
             UseAugaTrash = Config.Bind("Options", "UseAugaTrash", false, "Enable Auga's built in trash button. Click on the button while holding an item or part of a stack with the mouse.");
+            ScrollSpeed = Config.Bind("Accessibility", "ScrollSpeed", 10, new ConfigDescription("Mouse-wheel speed for all scroll lists. 1x equals 40 UI units per wheel step.", new AcceptableValueRange<int>(1, 20)));
             ShowClock = Config.Bind("Gameplay", "ShowClock", true, "Show the in-game HH:MM clock above the minimap.");
             
             HealthBarShow = Config.Bind("StatBars", "HealthBarShow", true, "If false, hides the health bar completely.");

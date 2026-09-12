@@ -22,7 +22,7 @@ try {
         foreach ($name in 'API.External.cs','API.Bridge.cs','API.Common.cs','API.Palette.cs') {
             Copy-Item -LiteralPath (Join-Path $repoPath "Auga/$name") -Destination (Join-Path $output 'Auga') -Force
         }
-        Copy-Item -LiteralPath docs/MODDING.md,docs/API-REFERENCE.md,docs/LEGACY-API.md -Destination (Join-Path $output 'docs') -Force
+        Copy-Item -LiteralPath docs/MODDING.md,docs/API-REFERENCE.md,docs/LEGACY-API.md,docs/UI-SETTINGS.md -Destination (Join-Path $output 'docs') -Force
         Copy-Item -LiteralPath AugaApiExample/AugaApiExample.cs,AugaApiExample/AugaApiExample.csproj -Destination (Join-Path $output 'AugaApiExample') -Force
         Copy-Item -LiteralPath AugaApiExample/Properties/AssemblyInfo.cs -Destination (Join-Path $output 'AugaApiExample/Properties') -Force
         Copy-Item -LiteralPath Auga/bin/API/AugaAPI.dll -Destination (Join-Path $output 'lib') -Force
@@ -36,7 +36,7 @@ try {
         $zip = New-Object IO.Compression.ZipArchive($stream, [IO.Compression.ZipArchiveMode]::Create)
         try {
             foreach ($entry in 'Auga/API.External.cs','Auga/API.Bridge.cs','Auga/API.Common.cs','Auga/API.Palette.cs',
-                'docs/MODDING.md','docs/API-REFERENCE.md','docs/LEGACY-API.md','AugaApiExample/AugaApiExample.cs','AugaApiExample/AugaApiExample.csproj',
+                'docs/MODDING.md','docs/API-REFERENCE.md','docs/LEGACY-API.md','docs/UI-SETTINGS.md','AugaApiExample/AugaApiExample.cs','AugaApiExample/AugaApiExample.csproj',
                 'AugaApiExample/Properties/AssemblyInfo.cs','lib/AugaAPI.dll','Directory.Build.props','README.md') {
                 [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $output $entry), $entry)
             }
